@@ -6,10 +6,15 @@ export async function getTopHeadlines(
   res: Response
 ) {
   try {
-    const category =
-      (req.query.category as string) || "technology";
+    const category = (req.query.category as string) || "general";
+    const page = Number(req.query.page) || 1;
+    const pageSize = Number(req.query.limit) || 40;
 
-    const data = await fetchTopHeadlines(category);
+    const data = await fetchTopHeadlines({
+      category,
+      page,
+      pageSize,
+    });
 
     res.status(200).json(data);
   } catch (error) {
