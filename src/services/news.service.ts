@@ -5,20 +5,38 @@ type CacheItem = {
   expiresAt: number;
 };
 
-const cache = new Map<string, CacheItem>();
-const CACHE_TTL = 1000 * 60 * 5; // 5 minutos
+type NewsFilters = {
+  category?: string;
+  search?: string;
+  source?: string;
+  date?: string;
+};
 
-export async function fetchTopHeadlines(category: string) {
+const cache = new Map<string, CacheItem>();
+const CACHE_TTL = 1000 * 60 * 5;
+
+export async function fetchTopHeadlines(filters: NewsFilters) {
   const now = Date.now();
 
-  const cacheKey = `news-${category}`;
+  const cacheKey = JSON.stringify(filters);
   const cached = cache.get(cacheKey);
 
   if (cached && cached.expiresAt > now) {
     return cached.data;
   }
 
-  const url = `${env.NEWS_API_URL}?country=us&category=${category}&apiKey=${env.NEWS_API_KEY}`;
+  const params = new URLSearchParams({
+    country: "us",
+    apiKey: env.NEWS_API_KEY,
+  });
+
+  if (filters.category) params.append("category", filters.category);
+  if (filters.search) params.append("q", filters.search);
+  if (filters.source) params.append("sources", filters.source);
+  if (filters.date) params.append("from", filters.date);
+
+  const url = `${env.NEWS_API_URL}?${params.toString()}`;
+
   const response = await fetch(url);
 
   if (!response.ok) {
