@@ -9,7 +9,13 @@ app.use(express.json());
 
 app.use(apiRateLimit);
 
-app.use(cors());
+app.use(cors({
+    origin: [
+      "http://localhost:3000",
+      "https://news-aggregator-sigma-sooty.vercel.app",
+      "https://newsaggregator-six.vercel.app"
+    ],
+}));
 
 app.use("/api", newsRoutes);
 
