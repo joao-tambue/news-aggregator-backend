@@ -1,4 +1,5 @@
 import { env } from "../config/env";
+import { generateRelatedContent } from "./gemini.service";
 
 type CacheItem = {
   data: any;
@@ -45,10 +46,35 @@ export async function fetchTopHeadlines(filters: NewsFilters) {
 
   const data = await response.json();
 
+  const enrichedArticles = await Promise.all(
+    data.articles.map(async (article: any) => {
+      let expandedContent = "";
+
+      try {
+        expandedContent = await generateRelatedContent({
+          title: article.title,
+          description: article.description,
+        });
+      } catch {
+        expandedContent = "";
+      }
+
+      return {
+        ...article,
+        expandedContent,
+      };
+    })
+  );
+
+  const enrichedData = {
+    ...data,
+    articles: enrichedArticles,
+  };
+
   cache.set(cacheKey, {
-    data,
+    data: enrichedData,
     expiresAt: now + CACHE_TTL,
   });
 
-  return data;
+  return enrichedData;
 }
